@@ -51,4 +51,38 @@
       ))
   )
 
+  (defun paid (id:string)
+    (with-read escrows id { "buyer": buyer, "state": state }
+      (do
+        (enforce (= (sender) buyer) "Only buyer")
+        (enforce (= state FUNDED) "Not funded")
+        (update escrows id { "state": PAID })
+      ))
+  )
+
+  (defun release (id:string)
+    (with-read escrows id
+      { "seller": seller, "buyer": buyer
+      , "arbiter": arbiter, "amount": amount, "state": state }
+      (do
+        (enforce (= state PAID) "Not releasable")
+        (enforce (or (= (sender) seller) (= (sender) arbiter))
+          "Unauthorized")
+        (coin.transfer (module-account) buyer amount)
+        (update escrows id { "state": DONE })
+      ))
+  )
+
+  (defun refund (id:string)
+    (with-read escrows id
+      { "seller": seller, "arbiter": arbiter
+      , "amount": amount, "state": state }
+      (do
+        (enforce (= (sender) arbiter) "Only arbiter")
+        (enforce (or (= state FUNDED) (= state PAID))
+          "Refund not allowed")
+        (coin.transfer (module-account) seller amount)
+        (update escrows id { "state": REFUND })
+      ))
+  )
 )
