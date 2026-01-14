@@ -30,4 +30,25 @@
       })
   )
 
+  (defun accept (id:string)
+    (with-read escrows id { "seller": seller, "state": state }
+      (do
+        (enforce (= state CREATED) "Not available")
+        (enforce (!= (sender) seller) "Seller cannot accept")
+        (update escrows id
+          { "buyer": (sender), "state": ACCEPTED })
+      ))
+  )
+
+  (defun deposit (id:string)
+    (with-read escrows id
+      { "seller": seller, "amount": amount, "state": state }
+      (do
+        (enforce (= (sender) seller) "Only seller")
+        (enforce (= state ACCEPTED) "Not accepted")
+        (coin.transfer seller (module-account) amount)
+        (update escrows id { "state": FUNDED })
+      ))
+  )
+
 )
