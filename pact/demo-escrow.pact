@@ -18,4 +18,16 @@
   (defconst DONE     "DONE")
   (defconst REFUND   "REFUND")
 
+  (defun create (id:string amount:decimal arbiter:string)
+    (enforce (> amount 0.0) "Amount must be positive")
+    (insert escrows id
+      { "id": id
+      , "seller": (sender)
+      , "buyer": ""
+      , "arbiter": arbiter
+      , "amount": amount
+      , "state": CREATED
+      })
+  )
+
 )
